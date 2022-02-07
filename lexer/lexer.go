@@ -18,12 +18,50 @@ func New(input string) *Lexer {
 }
 
 func (l *Lexer) NextToken() token.Token {
-	t := token.Token{Literal: string(l.currentChar), Type: getTokenType(l.currentChar)}
+	var t token.Token
+
+	l.skipWhitespace()
+
+	switch l.currentChar {
+	case '=':
+		t = token.NewToken(token.ASSIGN, l.currentChar)
+	case ';':
+		t = token.NewToken(token.SEMICOLON, l.currentChar)
+	case '(':
+		t = token.NewToken(token.LPAREN, l.currentChar)
+	case ')':
+		t = token.NewToken(token.RPAREN, l.currentChar)
+	case ',':
+		t = token.NewToken(token.COMMA, l.currentChar)
+	case '+':
+		t = token.NewToken(token.PLUS, l.currentChar)
+	case '{':
+		t = token.NewToken(token.LBRACE, l.currentChar)
+	case '}':
+		t = token.NewToken(token.RBRACE, l.currentChar)
+	case 0:
+		t.Literal = ""
+		t.Type = token.EOF
+	default:
+		if isLetter(l.currentChar) {
+			t.Literal = l.readIdentifier()
+			t.Type = token.LookupIdent(t.Literal)
+			return t // return early since we've already called readChar to advance in readIdentifer
+		} else if isDigit(l.currentChar) {
+			t.Literal = l.readNumber()
+			t.Type = token.INT
+			return t // return early since we've already called readChar to advance in readIdentifer
+		} else {
+			t = token.NewToken(token.ILLEGAL, l.currentChar)
+		}
+	}
+
 	l.readChar() // advance values in lexer
 
 	return t
 }
 
+// readChar advances to the next character in input
 func (l *Lexer) readChar() {
 	// if we're at end of input, set character to ASCII code for "NUL" to indicate EOF
 	if l.nextPosition >= len(l.input) {
@@ -37,27 +75,36 @@ func (l *Lexer) readChar() {
 	l.nextPosition += 1
 }
 
-func getTokenType(tokenLiteral byte) token.TokenType {
-	switch tokenLiteral {
-	case '=':
-		return token.ASSIGN
-	case ';':
-		return token.SEMICOLON
-	case '(':
-		return token.LPAREN
-	case ')':
-		return token.RPAREN
-	case ',':
-		return token.COMMA
-	case '+':
-		return token.PLUS
-	case '{':
-		return token.LBRACE
-	case '}':
-		return token.RBRACE
-	case 0:
-		return token.EOF
+// read an identifier (string of letters) from the input
+func (l *Lexer) readIdentifier() string {
+	position := l.currentPosition
+	for isLetter(l.currentChar) {
+		l.readChar()
 	}
 
-	return token.EOF
+	return l.input[position:l.currentPosition]
+}
+
+// read a number (string of digits) from the input
+func (l *Lexer) readNumber() string {
+	position := l.currentPosition
+	for isDigit(l.currentChar) {
+		l.readChar()
+	}
+
+	return l.input[position:l.currentPosition]
+}
+
+func (l *Lexer) skipWhitespace() {
+	for l.currentChar == ' ' || l.currentChar == '\t' || l.currentChar == '\n' || l.currentChar == '\r' {
+		l.readChar()
+	}
+}
+
+func isLetter(ch byte) bool {
+	return ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch == '_'
+}
+
+func isDigit(ch byte) bool {
+	return ch >= '0' && ch <= '9'
 }

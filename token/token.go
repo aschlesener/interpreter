@@ -5,7 +5,7 @@ const (
 	EOF     = "EOF"     // signifies our parser that it can stop
 
 	// Identifiers + literals
-	IDENT = "IDENT" // variable names -  add, foobar, x, y, etc.
+	IDENT = "IDENT" // user-defined variable names -  add, foobar, x, y, etc.
 	INT   = "INT"   // 123
 
 	// Operators
@@ -21,14 +21,31 @@ const (
 	LBRACE = "{"
 	RBRACE = "}"
 
-	// Keywords
+	// Language keywords
 	FUNCTION = "FUNCTION"
 	LET      = "LET"
 )
+
+var keywords = map[string]TokenType{
+	"fn":  FUNCTION,
+	"let": LET,
+}
 
 type TokenType string
 
 type Token struct {
 	Type    TokenType
 	Literal string // this is the token value
+}
+
+func NewToken(tokenType TokenType, ch byte) Token {
+	return Token{Type: tokenType, Literal: string(ch)}
+}
+
+// LookupIdent checks an identifier to determine if it is a keyword or a user-defined identifier
+func LookupIdent(ident string) TokenType {
+	if tok, ok := keywords[ident]; ok {
+		return tok
+	}
+	return IDENT
 }
