@@ -17,6 +17,8 @@ const (
 	SLASH    = "/"
 	LT       = "<"
 	GT       = ">"
+	EQ       = "=="
+	NEQ      = "!="
 
 	// Delimiters
 	COMMA     = ","
